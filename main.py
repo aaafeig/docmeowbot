@@ -8,12 +8,7 @@ BOT = bot_views.bot
 async def add_file(m):
     pass
 
-@BOT.message_handler(commands=['start'])
-def start(message):
-    """Функция для старта бота"""
-    bot_views.start(message)
-    bot_logic.user_id = bot_views.user_id
-
+@BOT.message_handler(content_types=['document'])
 async def handle_telegram_document(message: types.Message):
     """Принимает документ из Telegram и передает в обработчик add_file"""
     try:
@@ -38,8 +33,8 @@ async def handle_telegram_document(message: types.Message):
         BOT.reply_to(message, f"😿 Ошибка обработки файла: {str(e)}")
         raise
 
-
-# Регистрируем обработчик
+    finally:
+        bot_views.menu()
 
 @BOT.message_handler(func=lambda message: True, content_types=['text'])
 def check_message(message):

@@ -12,11 +12,11 @@ class BotLogicImpl(BotBase, BotLogic):
         super().__init__(token, core)
         self._back_markups = KeyBordUtils.markups_back()
 
-    def add_doc(self, doc):
+    async def add_doc(self, doc):
         """Метод для добавления файла в БД"""
         markup = self._back_markups
         self._bot.send_message(self._core.user_id, "🐱Скинь мне свой файл формата PDF, DOCX, Markdown или TXT")
-        self._bot.send_message(self._core.user_id, "😽Готово!", reply_markup=markup)
+
     def search(self, request: str):
         """Метод для поиска по базе"""
         markup = self._back_markups

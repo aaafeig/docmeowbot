@@ -7,7 +7,7 @@ class BotCore:
 
     def __init__(self):
         self._user_id = None
-
+        
     @property
     def user_id(self):
         return self._user_id
