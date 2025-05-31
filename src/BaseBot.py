@@ -1,5 +1,6 @@
-from abc import  ABC, abstractmethod
+from abc import ABC
 import telebot
+from telebot.storage import StateMemoryStorage
 
 
 class BotCore:
@@ -7,7 +8,7 @@ class BotCore:
 
     def __init__(self):
         self._user_id = None
-        
+
     @property
     def user_id(self):
         return self._user_id
@@ -21,8 +22,8 @@ class BotBase(ABC):
     """Абстрактный базовый класс с зависимостью от BotCore"""
 
     def __init__(self, token: str, core: BotCore):
-        self._token = token
-        self._bot = telebot.TeleBot(token)
+        self.storage = StateMemoryStorage()
+        self._bot = telebot.TeleBot(token, state_storage=self.storage)
         self._core = core
 
     @property

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class BotView(ABC):
 
     @abstractmethod
@@ -10,6 +11,7 @@ class BotView(ABC):
     def menu(self):
         pass
 
+
 class BotLogic(ABC):
 
     @abstractmethod
@@ -17,7 +19,7 @@ class BotLogic(ABC):
         pass
 
     @abstractmethod
-    def search(self, request: str):
+    def ask_request(self, message):
         pass
 
     @abstractmethod

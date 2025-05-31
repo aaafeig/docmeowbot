@@ -1,14 +1,27 @@
-from conf import  bot_views, bot_logic
+from conf import bot_views, bot_logic
 import io
 from fastapi import UploadFile
 from telebot import types
+from src.States import MyStates
 
 BOT = bot_views.bot
+
+
+@BOT.message_handler(commands=["start"])
+def start(message):
+    BOT.set_state(message.from_user.id, MyStates.start)
+    bot_views.start(message)
+    BOT.set_state(message.from_user.id, MyStates.main_menu)
+
 
 async def add_file(m):
     pass
 
-@BOT.message_handler(content_types=['document'])
+
+@BOT.message_handler(
+    content_types=["document"],
+    state=MyStates.wait_document,  # Только когда ждем документ
+)
 async def handle_telegram_document(message: types.Message):
     """Принимает документ из Telegram и передает в обработчик add_file"""
     try:
@@ -20,7 +33,7 @@ async def handle_telegram_document(message: types.Message):
         upload_file = UploadFile(
             filename=message.document.file_name,
             file=io.BytesIO(file_data),
-            size=message.document.file_size
+            size=message.document.file_size,
         )
 
         # Передаем в вашу функцию обработки
@@ -34,26 +47,55 @@ async def handle_telegram_document(message: types.Message):
         raise
 
     finally:
+        BOT.set_state(message.from_user.id, MyStates.main_menu)
         bot_views.menu()
 
-@BOT.message_handler(func=lambda message: True, content_types=['text'])
+
+@BOT.message_handler(content_types=["text"])
 def check_message(message):
     """Функция для проверки на случайные сообщения пользователя(которые не относятся к командам)"""
-    if not message.text.startswith('/'):
+    current_state = BOT.get_state(message.from_user.id)
+    if current_state in [MyStates.wait_document.name, MyStates.wait_search.name]:
+        return
+
+    if not message.text.startswith("/"):
         bot_views.answer_invalid_message()
     else:
         bot_views.answer_invalid_command()
 
 
+@BOT.message_handler(content_types=["text"])
+def debug_all_messages(message):
+    print(f"Получено: {message.text} | State: {BOT.get_state(message.from_user.id)}")
+
+
+@BOT.message_handler(state=MyStates.wait_search, content_types=["text"])
+def handle_search_query(message):
+    bot_logic._search(message)
+
+
 @BOT.callback_query_handler(func=lambda callback: True)
-def handler(callback):
+def handler(callback: types.CallbackQuery):
     """Функция, которая обрабатывает каллбеки и выполняет логику бота"""
     if callback.data == "add_doc":
-        bot_logic.add_doc() # добавления дока
+        bot_logic.add_doc()  # добавления дока
+        bot_views.delete_last_msg(callback.message.id)
     elif callback.data == "search_in_docs":
-        bot_logic.search() #генерирует ответ по запросу в доках
-    elif callback.data == "manage": # управление/редактирование дока
-        bot_logic.manage()
+        BOT.set_state(callback.from_user.id, MyStates.wait_search)
+        bot_logic.ask_request(callback.message)  # генерирует ответ по запросу в доках
+        bot_views.delete_last_msg(callback.message.id)
+        print(f"Состояние после set_state: {BOT.get_state(callback.from_user.id)}")
+    elif callback.data == "manage":
+        bot_logic.manage()  # управление/редактирование дока
+        bot_views.delete_last_msg(callback.message.id)
     elif callback.data == "back":
         bot_views.menu()
+    elif callback.data == "change1":
+        bot_views.answer_on_manage_end()
+    elif callback.data == "change2":
+        bot_views.answer_on_manage_end()
+    elif callback.data == "change3":
+        bot_views.answer_on_manage_end()
+
+
 BOT.polling(non_stop=True)
