@@ -1,6 +1,7 @@
 from main import BOT
 from conf import bot_views, bot_logic
 
+print(f"{id(BOT)} - handler")
 
 @BOT.message_handler(commands=["menu"])
 def menu():

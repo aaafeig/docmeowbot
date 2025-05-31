@@ -6,15 +6,13 @@ from .States import MyStates
 
 
 class BotLogicImpl(BotBase, BotLogic):
-    """Класс для работы, который отвечает за логику"""
-
-    def __init__(self, token: str, core: BotCore):
-        super().__init__(token, core)
+    def __init__(self, core: BotCore):
+        super().__init__(core)  # Инициализируем BotBase
         self._back_markups = KeyBordUtils.markups_back()
         self._manager_markups = KeyBordUtils.markups_manage()
 
     async def add_doc(self, doc):
-        """Метод для добавления файла в БД"""
+        """Метод для добавления  файла в БД"""
         self.bot.send_message(
             self._core.user_id,
             "🐱Скинь мне свой файл формата PDF, DOCX, Markdown или TXT",

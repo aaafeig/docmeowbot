@@ -8,6 +8,6 @@ from src.BotLogicImpl import BotLogicImpl
 
 load_dotenv()
 token = os.getenv('YOUR_TOKEN')
-bot_core = BotCore()
-bot_logic = BotLogicImpl(token, bot_core)
-bot_views = BotViewImpl(token, bot_core)
+bot_core = BotCore(token)
+bot_logic = BotLogicImpl(bot_core)
+bot_views = BotViewImpl(bot_core)

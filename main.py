@@ -1,17 +1,24 @@
-from conf import bot_views, bot_logic
+from conf import bot_views, bot_logic, bot_core
 import io
 from fastapi import UploadFile
 from telebot import types
 from src.States import MyStates
+from src.command_handler import *
 
-BOT = bot_views.bot
-
+BOT = bot_core.bot
+print(f"{id(BOT)} - main")
 
 @BOT.message_handler(commands=["start"])
 def start(message):
     BOT.set_state(message.from_user.id, MyStates.start)
     bot_views.start(message)
     BOT.set_state(message.from_user.id, MyStates.main_menu)
+
+
+@BOT.message_handler(commands=["menu"])
+def menu(message):
+    BOT.set_state(message.from_user.id, MyStates.main_menu)
+    bot_views.menu()
 
 
 async def add_file(m):
@@ -51,6 +58,12 @@ async def handle_telegram_document(message: types.Message):
         bot_views.menu()
 
 
+@BOT.message_handler(state=MyStates.wait_search, content_types=["text"])
+def handle_search_query(message):
+    bot_logic._search(message)
+
+
+
 @BOT.message_handler(content_types=["text"])
 def check_message(message):
     """Функция для проверки на случайные сообщения пользователя(которые не относятся к командам)"""
@@ -64,20 +77,13 @@ def check_message(message):
         bot_views.answer_invalid_command()
 
 
-@BOT.message_handler(content_types=["text"])
-def debug_all_messages(message):
-    print(f"Получено: {message.text} | State: {BOT.get_state(message.from_user.id)}")
-
-
-@BOT.message_handler(state=MyStates.wait_search, content_types=["text"])
-def handle_search_query(message):
-    bot_logic._search(message)
-
-
 @BOT.callback_query_handler(func=lambda callback: True)
 def handler(callback: types.CallbackQuery):
     """Функция, которая обрабатывает каллбеки и выполняет логику бота"""
-    if callback.data == "add_doc":
+    if callback.data == "menu":
+        bot_views.menu()
+        BOT.delete_message(bot_views.user_id, callback.message.id)
+    elif callback.data == "add_doc":
         bot_logic.add_doc()  # добавления дока
         bot_views.delete_last_msg(callback.message.id)
     elif callback.data == "search_in_docs":
@@ -90,6 +96,7 @@ def handler(callback: types.CallbackQuery):
         bot_views.delete_last_msg(callback.message.id)
     elif callback.data == "back":
         bot_views.menu()
+        bot_views.delete_last_msg(callback.message.id)
     elif callback.data == "change1":
         bot_views.answer_on_manage_end()
     elif callback.data == "change2":
